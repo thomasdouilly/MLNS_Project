@@ -53,12 +53,10 @@ def edge_prediction(node2embedding, train_samples, test_samples, train_labels, t
     # --- Construct feature vectors for edges ---
     feature_func = lambda x,y: abs(x-y)
     
-    # Fill in the blanks
     train_features = [feature_func(node2embedding[str(edge[0])], node2embedding[str(edge[1])]) for edge in train_samples]
     test_features = [feature_func(node2embedding[str(edge[0])], node2embedding[str(edge[1])]) for edge in test_samples]
     
     # --- Build the model and train it ---
-    # Fill in the blanks
     clf = LogisticRegression(class_weight='balanced')
     clf.fit(train_features, train_labels)
 
@@ -74,6 +72,12 @@ walk_length = [1, 10, 20, 50, 100]
 window_sizes = [2, 5, 10, 20]
 embedding_size = 32
 results = []
+
+
+
+"""
+Skipgram whole process
+"""
 
 nb = len(num_of_walks)*len(walk_length)*len(window_sizes)
 i = 0

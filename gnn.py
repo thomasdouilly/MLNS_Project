@@ -5,10 +5,18 @@ from sklearn.metrics import confusion_matrix
 import torch
 import torch.nn.functional as F
 import torch_geometric.nn as torchnn
+import matplotlib.pyplot as plt
 
 
 def data_refining_pipeline(features_dic, known_edges, known_non_edges):
     
+    """data_refining pipeline
+    
+    Refines the data to form adjancy matrices as well as a node features matrix
+
+    Returns:
+        features_matrix, true_adjancy_matrix, false_adjancy_matrix
+        """
     features_matrix = []
     
     for node in features_dic:
@@ -24,6 +32,11 @@ def data_refining_pipeline(features_dic, known_edges, known_non_edges):
     return features_matrix, true_adjancy_matrix, false_adjancy_matrix
 
 class LinkPredictionGNN(torch.nn.Module):
+    
+    """LinkPredictionGNN
+    
+    Implementation of our GNN model with number of hidden channels set to 16
+    """
     def __init__(self, in_channels, hidden_channels = 16):
         
         super(LinkPredictionGNN, self).__init__()
@@ -56,7 +69,21 @@ class LinkPredictionGNN(torch.nn.Module):
 
 
 def train(model, optimizer, x, train_pos_edge_index, train_neg_edge_index, device):
+    """train
+
+    Function used to train the model on training data
     
+    Args:
+        model : The untrained model
+        optimizer : Optimizer to be used here
+        x : Node Feature Matrix
+        train_pos_edge_index : Adjancy Matrix of known Edges
+        train_neg_edge_index : Adjancy Matrix of known non-Edges
+        device : The device to be used
+
+    Returns:
+        The loss on training data obtained after training process
+    """
     model.train()
     
     optimizer.zero_grad()
@@ -79,14 +106,35 @@ def train(model, optimizer, x, train_pos_edge_index, train_neg_edge_index, devic
 
 def launch_training_process(model, x, train_pos_edge_index, train_neg_edge_index, num_epochs, learning_rate, device):
 
-    optimizer = torch.optim.Adam(model.parameters(), lr = learning_rate)
+    """launch_training_process
+    
+    Launches the training process of a model for a certain number of epochs and prints the evolution graph of the loss
 
+    Returns:
+        _type_: _description_
+    """
+    optimizer = torch.optim.Adam(model.parameters(), lr = learning_rate)
+    epochs_list = []
+    loss_list = []
+    
     for epoch in range(num_epochs):
         loss = train(model, optimizer, x, train_pos_edge_index, train_neg_edge_index, device)
         print('Epoch [{}/{}], Loss: {:.4f}'.format(epoch+1, num_epochs, loss))
+        epochs_list.append(epoch + 1)
+        loss_list.append(loss)
+
+    plt.plot(epochs_list, loss_list, 'm-o')
+
+    plt.xlabel('Epochs', fontsize=14)
+    plt.ylabel('Value of Binary Cross-Entropy Loss', fontsize=14)
+    plt.show()    
 
     return model
 
+
+"""
+GNN whole process
+"""
 
 _, features, known_edges, known_non_edges, unknown_edges, unknown_non_edges = get_prepared_data(use = 'gnn')
 features_matrix, true_adjancy_matrix, false_adjancy_matrix = data_refining_pipeline(features, known_edges, known_non_edges)
@@ -106,7 +154,7 @@ y_test = y_test[random_index]
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = LinkPredictionGNN(features_matrix.shape[1], 64).to(device)
 
-model = launch_training_process(model, features_matrix, true_adjancy_matrix, false_adjancy_matrix, 200, 10, device)
+model = launch_training_process(model, features_matrix, true_adjancy_matrix, false_adjancy_matrix, 25, 0.1, device)
 
 #y_hat_test = model(features_matrix.float().to(device), X_test.to(device)).detach().numpy()
 #print(confusion_matrix(y_test, y_hat_test))

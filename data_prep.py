@@ -7,6 +7,15 @@ import random as rd
 
 def read_data():
     
+    """read_data
+
+    Load the data from csv to python
+    
+    Returns:
+        edges_set: A list of tuples containing the indexes of extremal notes
+        features_dic: A dictionnary containing for each node index a list of raw features
+    """
+    
     with open("data/large_twitch_edges.csv", "r") as f:
         reader = csv.reader(f)
         edges_set = list(reader)[1:]
@@ -37,6 +46,11 @@ def read_data():
 
 def feature_builder(pre_features):
     
+    """feature_builder
+
+    Process the node features dictionary to refine and reshape them in more useful way
+    """
+    
     features = {}
     
     for vertice in pre_features:
@@ -59,6 +73,10 @@ def feature_builder(pre_features):
 
 def nationality_filtering(features, edges, nationality = None):
     
+    """nationaliity_filtering
+
+    Filter features and edges set according to a nationality and keeps only non dead accounts.
+    """
     if nationality != None:
         
         def dic_nationality_filter(pair):
@@ -81,7 +99,12 @@ def nationality_filtering(features, edges, nationality = None):
 
 def split_data(data_to_split, rate = 0.2):
     
-    rd.shuffle(data_to_split)
+    """split_data
+
+    Splits the data in two sets with a fixed rate
+    """
+    
+    rd.Random(120).shuffle(data_to_split)
     N = len(data_to_split)
     split_1, split_2 = data_to_split[:int(N*rate)], data_to_split[int(N*rate):]
     
@@ -90,6 +113,11 @@ def split_data(data_to_split, rate = 0.2):
 
 def get_graph(edges, features):
     
+    """get_graph
+
+    Returns:
+        graph: A networkx graph containing all data extracted previously
+    """
     graph = nx.Graph()
     
     for key in features:
@@ -103,6 +131,12 @@ def get_graph(edges, features):
     return graph
 
 def arrange(known_edges, known_non_edges, unknown_edges, unknown_non_edges, N_test = 1000):
+    
+    """arrange
+
+    Returns:
+        X_train, y_train, X_test, y_test: Splits of the initial dataset forming training and testing datasets
+    """
     
     print('Composition of the datasets :')
     print('Training dataset : ', len(known_edges), " edges and ", len(known_non_edges), " non_edges.")
@@ -118,6 +152,12 @@ def arrange(known_edges, known_non_edges, unknown_edges, unknown_non_edges, N_te
     return X_train, y_train, X_test, y_test
 
 def get_prepared_data(use = 'classical'):
+    
+    """get_prepared_data
+
+    Computes the whole data preparation process
+    Loads the data in python, store them into a graph and lists, and split them into training and testing datasets
+    """
     
     edges, complete_features = read_data()
     
